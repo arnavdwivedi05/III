@@ -50,3 +50,35 @@ print(noisy_pattern)
 
 print("Recalled Pattern:")
 print(recalled_pattern)
+
+# ###### Universal Approximation Theorem using RNN ###########
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import SimpleRNN, Dense
+import matplotlib.pyplot as plt
+
+# Create a simple sequence dataset (sine wave)
+x = np.linspace(0, 100, 1000)
+data = np.sin(x)
+seq_len = 10
+
+X = np.array([data[i:i+seq_len] for i in range(len(data)-seq_len)])
+y = np.array([data[i+seq_len] for i in range(len(data)-seq_len)])
+
+X = X.reshape((X.shape[0], X.shape[1], 1))  # [samples, timesteps, features]
+
+# Define a simple RNN model
+model = Sequential([
+    SimpleRNN(10, activation='tanh', input_shape=(seq_len, 1)),
+    Dense(1)
+])
+
+model.compile(optimizer='adam', loss='mse')
+model.fit(X, y, epochs=10, verbose=0)
+
+# Predict and plot
+pred = model.predict(X)
+plt.plot(y, label='True')
+plt.plot(pred, label='Predicted')
+plt.legend()
+plt.show()
