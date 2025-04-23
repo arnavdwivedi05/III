@@ -65,3 +65,34 @@ for epoch in range(epochs):
         print(f"Epoch [{epoch}/{epochs}], Loss: {loss.item():.4f}")
 
 print("Training complete!")
+
+# Easier version for the backpropogation
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import SimpleRNN, Dense
+from tensorflow.keras.optimizers import Adam
+
+# Parameters
+time_steps = 5
+input_dim = 3
+hidden_dim = 4
+output_dim = 2
+epochs = 50
+# Generate normalized input and label data
+X = np.random.randn(100, time_steps, input_dim) * 0.1
+y = np.random.randn(100, output_dim) * 0.1
+
+# Build RNN model
+model = Sequential()
+model.add(SimpleRNN(hidden_dim, input_shape=(time_steps, input_dim)))
+model.add(Dense(output_dim))
+
+# Compile model
+model.compile(optimizer=Adam(learning_rate=0.0001), loss='mse')
+
+# Train model with custom output
+for epoch in range(epochs+1):
+    model.fit(X, y, epochs=10, verbose=0)
+    loss = model.evaluate(X, y, verbose=0)
+    if epoch%10 == 0:
+      print(f"Epoch [{epoch}/{epochs}], Loss: {loss:.4f}")
