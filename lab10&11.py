@@ -105,3 +105,58 @@
 # for model_fn, name in [(get_lenet, "LeNet"), (get_alexnet, "AlexNet")]:
 #     trained_model = train_model(model_fn, name)
 #     show_filters(trained_model)
+
+
+# Code for placesnet and VGG16
+
+import tensorflow as tf
+import numpy as np
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras import layers, models
+from tensorflow.keras.utils import to_categorical
+from sklearn.metrics import accuracy_score
+
+# Load MNIST and preprocess
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+x_train = tf.image.resize(tf.stack([x_train]*3, axis=-1), [32, 32]) / 255.0
+x_test = tf.image.resize(tf.stack([x_test]*3, axis=-1), [32, 32]) / 255.0
+y_train_cat = to_categorical(y_train, 10)
+y_test_cat = to_categorical(y_test, 10)
+
+# VGG16 Model
+def get_vgg16():
+    base = VGG16(include_top=False, weights='imagenet', input_shape=(32, 32, 3))
+    base.trainable = False
+    model = models.Sequential([
+        base,
+        layers.Flatten(),
+        layers.Dense(128, activation='relu'),
+        layers.Dense(10, activation='softmax')
+    ])
+    return model
+
+# PlacesNet-like Model
+def get_placesnet():
+    model = models.Sequential([
+        layers.Conv2D(64, 3, activation='relu', padding='same', input_shape=(32,32,3)),
+        layers.MaxPooling2D(),
+        layers.Conv2D(128, 3, activation='relu', padding='same'),
+        layers.MaxPooling2D(),
+        layers.Flatten(),
+        layers.Dense(128, activation='relu'),
+        layers.Dense(10, activation='softmax')
+    ])
+    return model
+
+# Train and evaluate
+def train_model(model_fn, name):
+    model = model_fn()
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.fit(x_train, y_train_cat, epochs=3, batch_size=64, verbose=0)
+    y_pred = model.predict(x_test).argmax(axis=1)
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Accuracy with {name}: {acc*100:.2f}%")
+
+# Run both
+for fn, name in [(get_vgg16, "VGG16"), (get_placesnet, "PlacesNet")]:
+    train_model(fn, name)
